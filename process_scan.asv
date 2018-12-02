@@ -25,8 +25,8 @@ for index = 1:length(files)
         new_scan = generate_noise(new_scan, rot, trans);
         [cup_ind, corr_point_ind] = find_point_correspondence(cups, new_scan, avg_cup_dist);
         [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
-        new_point_ind = setdiff(1:length(new_scan), corr_point_ind);
-        new_points = new_scan(:, new_point_ind);
+        new_point_ind = [1:length(new_scan)] == 
+        new_points = new_scan([1
         cups = [cups, R * new_points + t];
     end
     z = calc_gradient(xs, ys, cups, 0.5);
@@ -44,7 +44,6 @@ function z = calc_gradient(xs, ys, points, order)
         y1 = points(2, i);
         x2 = points(1, i + 1);
         y2 = points(2, i + 1);
-        plot([x1, x2], [y1, y2], 'k--')
         x_interp = linspace(x1, x2, interpolated_points);
         y_interp = linspace(y1, y2, interpolated_points);
         for j = 1:length(x_interp)
