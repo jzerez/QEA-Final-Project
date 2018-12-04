@@ -4,18 +4,32 @@ clear all
 close all
 
 test_cones = [5,-3;5,2;3,7;-2,7;-5,4;-5,-2;-3,-4;2,-4;5,-3];
-z = zeros(length(test_cones),1);
-test_cones_3d = cat(2,test_cones,z);
+
+for i = 1:length(test_cones)-1
+    vector(i,:) = test_cones(i+1,:)-test_cones(i,:);
+    norm_vector(i,:) = vector(i,:)/norm(vector(i,:));
+end
+
+for j = 1:length(norm_vector)-1
+    angle_between(j) = acosd(dot(norm_vector(j,:),norm_vector(j+1,:)));
+    midangle(j) = 90+(angle_between(j)/2);
+end
+
+for k = 1:length(midangle)
+    rot = [cosd(midangle(k)) -sind(midangle(k)); sind(midangle(k)) cosd(midangle(k))];
+    offset_dir(k,:) = (rot*norm_vector(k,:)')';
+    offset_point(k,:) = (offset_dir(k,:)+test_cones(k+1,:))';
+end
+
+for m = 1:length(offset_point)-1
+    path_vector(m,:) = offset_point(m+1,:)-offset_point(m,:);
+end
+
 figure
 plot(test_cones(:,1),test_cones(:,2),'o');
-
-for i = 1:length(test_cones_3d)-1
-    vector(i,:) = test_cones_3d(i+1,:)-test_cones_3d(i,:);
-end
-
-for j = 1:length(vector)-1
-    angle_between(j) = atan2d(norm(cross(vector(j,:),vector(j+1,:))),dot(vector(j,:),vector(j+1,:)));
-    midangle(j) = (180-angle(j))/2;
-    midangle(j) = (atan2d(norm(cross(vector(j,:),vector(j+1,:))),dot(vector(j,:),vector(j+1,:)))+180)/2;
-end
-
+hold on 
+plot(offset_point(:,1),offset_point(:,2),'s');
+quiver(test_cones(1:8,1),test_cones(1:8,2),vector(:,1),vector(:,2),'Color','b','LineStyle','--')
+quiver(offset_point(1:6,1),offset_point(1:6,2),path_vector(:,1),path_vector(:,2),'Color','r','LineStyle','--')
+hold off
+axis equal
