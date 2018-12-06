@@ -12,7 +12,7 @@ function cones_indices = cluster_detection(file, debug)
     radius_std = std(delta_rs) * 0.35;
     clusters = [];
     first_index = 0;
-    for index = 1:length(delta_rs)
+    for index = 1:length(delta_rs)+1
         if abs(delta_rs(index)) > radius_std
             if first_index == 0
                 first_index = index + 1;
@@ -24,21 +24,34 @@ function cones_indices = cluster_detection(file, debug)
     end
     rs = circshift(rs, -clusters(1,1) + 1);
     thetas = circshift(thetas, -clusters(1,1)+1);
-    delta_rs = diff(rs);
+    delta_rs
     clusters = clusters - [clusters(1,1)-1; clusters(1,1)-1];
     
-    for index = clusters(end)+1:length(delta_rs)
+    for index = clusters(end)+1:length(rs)
         if abs(delta_rs(index)) > radius_std
             clusters = [clusters, [clusters(end)+1; index]];
         end
     end
-    clusters = [clusters, [clusters(end)+1; length(rs)]];
     
     large_clusters = diff(clusters) > 2;
     clusters = clusters(:, large_clusters);
     cones_indices = [];
     cone_centers = [];
+    figure
+    hold on
+    plot(0, 0, 'gs')
+    
     [xs, ys] = pol2cart(thetas, rs);
+    plot(xs, ys, 'bo')
+    
+    figure
+    hold on
+    for index = 1:length(clusters)
+        start_index = (clusters(1, index));
+        end_index = (clusters(2, index));
+        plot(xs(start_index:end_index), ys(start_index:end_index), 'rs')
+        axis equal
+    end
     
     for index = 1:length(clusters)
         start_index = (clusters(1, index));
@@ -49,7 +62,7 @@ function cones_indices = cluster_detection(file, debug)
         [center, radius] = calc_circle(cluster_points)
         plot(center(1), center(2), 'k*')
         avg_radius = mean(vecnorm(cluster_points - center))
-        if avg_radius > DESIRED_RADIUS * 0.5 && avg_radius < DESIRED_RADIUS * 3
+        if avg_radius > DESIRED_RADIUS * 0.75 && avg_radius < DESIRED_RADIUS * 2.5
             cones_indices = [cones_indices, index]; 
             cone_centers = [cone_centers, center];
         end
@@ -61,7 +74,7 @@ function cones_indices = cluster_detection(file, debug)
         plot(xs, ys, 'bo')
         plot(0, 0, 'gs')
         if numel(cone_centers) > 0
-            plot(cone_centers(1, :), cone_centers(2, :), 'gs') 
+            plot(cone_centers(1, :), cone_centers(2, :), 'r-') 
         end
     end
 

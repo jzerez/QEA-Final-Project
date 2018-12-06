@@ -29,7 +29,7 @@ figure
 plot(test_cones(:,1),test_cones(:,2),'o');
 hold on 
 plot(offset_point(:,1),offset_point(:,2),'s');
-quiver(test_cones(1:8,1),test_cones(1:8,2),vector(:,1),vector(:,2),'Color','b','LineStyle','--')
+quiver(test_cones(1:end-1,1),test_cones(1:end-1,2),vector(:,1),vector(:,2),'Color','b','LineStyle','--')
 quiver(offset_point(1:6,1),offset_point(1:6,2),path_vector(:,1),path_vector(:,2),'Color','r','LineStyle','--')
 hold off
 axis equal
