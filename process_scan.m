@@ -5,8 +5,10 @@
 %         "./Data/5-circle-3.mat";...
 %         "./Data/5-circle-4.mat";...
 %         "./Data/5-line-2.mat"];
-    
-% files = ["./Data/Course-1.mat"];
+%     
+files = ["./Data/Course-1.mat";...
+         "./Data/Course-2.mat";...
+         "./Data/Course-3.mat"];
 % files = ["./Data/3-line-A.mat";...
 %         "./Data/3-line-B.mat";];
 close all
@@ -24,14 +26,13 @@ for index = 1:length(files)
         avg_cup_dist = mean(norm(diff(cups, 1, 2)));
     else
         new_scan = generate_noise(new_scan, rot, trans);
-        [cup_ind, corr_point_ind] = find_point_correspondence(cups, new_scan, avg_cup_dist);
+        [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist);
+%         [cup_ind, corr_point_ind] = find_point_correspondence(cups, new_scan, avg_cup_dist);
         [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
         new_point_ind = setdiff(1:length(new_scan), corr_point_ind);
         new_points = new_scan(:, new_point_ind);
         cups = [cups, R * new_points + t];
     end
-    z = calc_gradient(xs, ys, cups, 0.5);
-    contour(xs, ys, z)
     
 end
 
@@ -108,3 +109,22 @@ function [corr_indices_global, corr_indices_local] = find_point_correspondence(g
         corr_indices_global = [corr_indices_global, global_ind_to_keep];
     end
 end
+
+function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_points, encoder_corrected_points, avg_cup_dist)
+    pr_new = 0.25;
+    pr_old = 1-pr_new;
+    for index = 1:length(encoder_corrected_points)
+        point = encoder_corrected_points(:, index);
+        [new_probs, new_prob] = calc_prob(global_points, point, avg_cup_dist, 1);
+        [old_probs, old_prob] = calc_prob(global_points, point, 0, 1);
+        unnormalized_new_probability = pr_new * new_prob;
+        unnormalized_old_probability = pr_old * old_prob;
+        posterior_new = unnormalized_new_probability / (unnormalized_new_probability + unnormalized_old_probability);
+        if posterior_new > 0.5
+            corr_indices_local = [corr_indices_local; index];
+            [M, I] = min(vecnorm(global_points - point));
+            corr_indices_global = [corr_indices_global; I];
+        end
+    end
+end
+

@@ -1,4 +1,4 @@
-function cones_indices = cluster_detection(file, debug)
+function cone_centers = cluster_detection(file, debug)
     disp(file)
     load(char(file))
 
@@ -45,11 +45,9 @@ function cones_indices = cluster_detection(file, debug)
         end_index = (clusters(2, index));
         sample_points = round(linspace(start_index, end_index, 3));
         cluster_points = [xs(sample_points)'; ys(sample_points)'];
-        plot(cluster_points(1, :), cluster_points(2, :), 'rs')
-        [center, radius] = calc_circle(cluster_points)
-        plot(center(1), center(2), 'k*')
-        avg_radius = mean(vecnorm(cluster_points - center))
-        if avg_radius > DESIRED_RADIUS * 0.5 && avg_radius < DESIRED_RADIUS * 3
+        [center, radius] = calc_circle(cluster_points);
+        avg_radius = mean(vecnorm(cluster_points - center));
+        if avg_radius > DESIRED_RADIUS * 0.5 && avg_radius < DESIRED_RADIUS * 4
             cones_indices = [cones_indices, index]; 
             cone_centers = [cone_centers, center];
         end
@@ -61,8 +59,9 @@ function cones_indices = cluster_detection(file, debug)
         plot(xs, ys, 'bo')
         plot(0, 0, 'gs')
         if numel(cone_centers) > 0
-            plot(cone_centers(1, :), cone_centers(2, :), 'gs') 
+            plot(cone_centers(1, :), cone_centers(2, :), 'r*') 
         end
+        axis equal
     end
 
 
