@@ -4,6 +4,8 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     ordered_cones(:,1) = cones(:,closest_indx);
     cones = remove(ordered_cones(:,1),cones);
     ordered_cones(:,2) = next_cone(neato_origin,neato_orientation,cones);
+    cones = remove(ordered_cones(:,2),cones);
+    ordered_cones(:,3) = next_cone(ordered_cones(:,2),ordered_cones(:,2)-ordered_cones(:,1),cones);
     next_pos = generate_offset(ordered_cones);
     
     k = cross(neato_orientation,next_pos-neato_origin);
