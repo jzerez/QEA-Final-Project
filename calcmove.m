@@ -1,12 +1,12 @@
 function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     cones(3,:) = zeros(1,length(cones));
-    [~,closest_indx] = min(norm(cones-neato_origin));
+    [~,closest_indx] = min(vecnorm(cones-neato_origin));
     ordered_cones(:,1) = cones(:,closest_indx);
     cones = remove(ordered_cones(:,1),cones);
     ordered_cones(:,2) = next_cone(neato_origin,neato_orientation,cones);
     cones = remove(ordered_cones(:,2),cones);
     ordered_cones(:,3) = next_cone(ordered_cones(:,2),ordered_cones(:,2)-ordered_cones(:,1),cones);
-    next_pos = generate_paths(ordered_cones);
+    next_pos = generate_offset(ordered_cones);
     
     k = cross(neato_orientation,next_pos-neato_origin);
     angle3d = sign(k)*atan2d(norm(k),dot(neato_orientation,next_pos-neato_origin));
@@ -48,7 +48,7 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     msg.Data = [0,0];
     send(pub,msg);
 
-    function points = generate_paths(cones)
+    function points = generate_offset(cones)
         vector = diff(cones,1,2);
         norm_vector = vector./vecnorm(vector);
 
