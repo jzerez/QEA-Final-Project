@@ -25,7 +25,7 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
         omega_r = 0.15;
     end
     omega = (omega_r-omega_l)/d;
-    t_rotate = angle/omega;
+    t_rotate = deg2rad(angle)/omega;
     
     pub = rospublisher('/raw_vel');
     sub_bump = rossubscriber('/bump');
