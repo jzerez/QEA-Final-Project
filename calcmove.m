@@ -16,7 +16,7 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     v_l = 0.15;
     v_r = 0.15;
     v = (v_l+v_r)/2;
-    t_forward = translation/v;
+    t_forward = norm(translation)/v;
     
     d = 0.24;
     if angle < 0
