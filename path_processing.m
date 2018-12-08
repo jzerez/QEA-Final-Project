@@ -27,21 +27,24 @@ ordered_cones(:,2) = next_cone(neato_origin,neato_orientation,shuffled_cones);
 shuffled_cones = remove(ordered_cones(:,2),shuffled_cones);
 ordered_cones(:,3) = next_cone(ordered_cones(:,2),ordered_cones(:,2)-ordered_cones(:,1),shuffled_cones);
 
-[next_pos,pos_vector] = generate_paths(ordered_cones);
-figure
-plot(test_cones(1,:),test_cones(2,:),'b-');
-hold on
-plot(shuffled_cones(1,:),shuffled_cones(2,:),'r-');
-plot(neato_origin(1),neato_origin(2),'gs');
-quiver(neato_origin(1),neato_origin(2),neato_orientation(1),neato_orientation(2),'AutoScale','off');
-plot(next_pos(1),next_pos(2),'ks');
-quiver(neato_origin(1),neato_origin(2),next_pos(1)-neato_origin(1),next_pos(2)-neato_origin(2),'AutoScale','off');
-hold off
-xlim([0,5])
-axis equal
+% [next_pos,pos_vector] = generate_paths(ordered_cones);
+% figure
+% plot(test_cones(1,:),test_cones(2,:),'b-');
+% hold on
+% plot(shuffled_cones(1,:),shuffled_cones(2,:),'r-');
+% plot(neato_origin(1),neato_origin(2),'gs');
+% quiver(neato_origin(1),neato_origin(2),neato_orientation(1),neato_orientation(2),'AutoScale','off');
+% plot(next_pos(1),next_pos(2),'ks');
+% quiver(neato_origin(1),neato_origin(2),next_pos(1)-neato_origin(1),next_pos(2)-neato_origin(2),'AutoScale','off');
+% hold off
+% xlim([0,5])
+% axis equal
 
 k = cross(neato_orientation,next_pos-neato_origin);
-angle = sign(k)*atan2d(norm(k),dot(neato_orientation,next_pos-neato_origin));
+angle3d = sign(k)*atan2d(norm(k),dot(neato_orientation,next_pos-neato_origin));
+angle = angle3d(3);
+
+forward = norm(next_pos-neato_origin);
 
 %[func_points,func_paths] = generate_paths(test_cones);
 % figure
