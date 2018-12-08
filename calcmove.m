@@ -1,6 +1,6 @@
 function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     cones(3,:) = zeros(1,length(cones));
-    [~,closest_indx] = min(vecnorm(cones-neato_origin));
+    [~,closest_indx] = min(norm(cones-neato_origin));
     ordered_cones(:,1) = cones(:,closest_indx);
     cones = remove(ordered_cones(:,1),cones);
     ordered_cones(:,2) = next_cone(neato_origin,neato_orientation,cones);
