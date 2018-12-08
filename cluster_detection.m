@@ -1,7 +1,4 @@
-function cone_centers = cluster_detection(file, debug)
-    disp(file)
-    load(char(file))
-
+function cone_centers = cluster_detection(scan1, debug)
     DESIRED_RADIUS = 0.0351;   %m
 
     rs = scan1(:, 1);
@@ -47,7 +44,7 @@ function cone_centers = cluster_detection(file, debug)
         cluster_points = [xs(sample_points)'; ys(sample_points)'];
         [center, radius] = calc_circle(cluster_points);
         avg_radius = mean(vecnorm(cluster_points - center));
-        if avg_radius > DESIRED_RADIUS * 0.5 && avg_radius < DESIRED_RADIUS * 4
+        if avg_radius > DESIRED_RADIUS * 0.5 && avg_radius < DESIRED_RADIUS * 3
             cones_indices = [cones_indices, index]; 
             cone_centers = [cone_centers, center];
         end

@@ -18,20 +18,16 @@ ys = linspace(-5, 5, 100);
 
 sub = rossubscriber('/stable_scan');
 neato_pos = [0; 0];         %m, m
-neato_ori = [1; 0];         %m, m
-neato_angle = 0;            %deg
+neato_ori = [1; 0];              %deg
 
-new_scan = cluster_detection(take_scan(sub), 1);
+new_scan = cluster_detection(take_scan(), 1);
 cups = new_scan;
 avg_cup_dist = mean(norm(diff(cups, 1, 2)));
-
+[angle, translation] = calcmove(neato_pos, neato_ori, cups);
+[neato_pos, neato_ori] = update_pos_and_ori(angle, translation, neato_pos, neato_ori);
 
 for index = 1:55
-    [angle, translation] = calcmove(neato_pos, neato_ori, cups);
-    [neato_pos, neato_ori, neato_angle] = update_pos_and_ori(angle, translation, neato_pos, neato_ori, neato_angle);
-    
-    new_scan = cluster_detection(take_scan(sub), 1);
-    new_scan = rough_transform(neato_angle, neato_pos, new_scan);
+    new_scan = rough_transform(angle, translation, cluster_detection(take_scan(), 1));
     [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist);
     [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
     new_point_ind = setdiff(1:length(new_scan), corr_point_ind);
@@ -41,11 +37,11 @@ end
 
 
 %%
-function polar_points = take_scan(sub)
+function polar_points = take_scan()
     scan_message = receive(sub);
     r = scan_message.Ranges(1:end-1);
     theta = [0:359]';
-    polar_points = [r, theta];
+    polar_points = [r_1, theta_1];
 end
 function z = calc_gradient(xs, ys, points, order)
     [xmesh, ymesh] = meshgrid(xs, ys);
@@ -97,11 +93,10 @@ function points = rough_transform(angle, trans, input_points)
     points = rot * input_points + trans;
 end
 
-function [pos, ori, angle] = update_pos_and_ori(angle, translation, old_pos, old_ori, old_angle)
+function [pos, ori] = update_pos_and_ori(angle, translation, old_pos, old_ori)
     rot = [cosd(angle), -sind(angle); sind(angle), cosd(angle)];
     pos = old_pos + translation;
     ori = rot * old_ori;
-    angle = angle + old_angle;
     
 end
 
