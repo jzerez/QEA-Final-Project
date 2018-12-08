@@ -59,7 +59,7 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
 
         for j = 1:size(midangle,2)
             rot = [cosd(midangle(j)) -sind(midangle(j)) 0; sind(midangle(j)) cosd(midangle(j)) 0; 0 0 0];
-            offset_dir(:,j) = rot*norm_vector(:,j);
+            offset_dir(:,j) = rot*0.25*norm_vector(:,j);
             points(:,j) = offset_dir(:,j)+cones(:,j+1);
         end
     end
@@ -73,7 +73,7 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     function next = next_cone(origin,orientation,cones)
         vectors = cones-origin;
         distances = vecnorm(vectors);
-        closest_indices = distances < 3;
+        closest_indices = distances < 2;
         closest_cones = cones(:,closest_indices);
         closest_vectors = vectors(:,closest_indices);
         dot_length = 0;
