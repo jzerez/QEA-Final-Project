@@ -11,9 +11,9 @@ shuffled_cones = test_cones(:,randperm(length(test_cones)));
 neato_orientation = [1;0;0];
 
 figure
-plot(test_cones(1,:),test_cones(2,:),'b-');
+plot(test_cones(1,:),test_cones(2,:),'bs-');
 hold on
-plot(shuffled_cones(1,:),shuffled_cones(2,:),'r-');
+plot(shuffled_cones(1,:),shuffled_cones(2,:),'ro-');
 plot(neato_origin(1),neato_origin(2),'gs');
 quiver(neato_origin(1),neato_origin(2),neato_orientation(1),neato_orientation(2),'AutoScale','off');
 hold off
@@ -76,7 +76,7 @@ function point = generate_offset(cones)
     norm_vector = vector./vecnorm(vector);
     midangle = 90;
     rot = [0 -1 0; 1 0 0; 0 0 0];
-    offset_dir = rot*-0.25*norm_vector;
+    offset_dir = rot*-0.5*norm_vector;
     point = offset_dir+cones(:,2);
 end
 
