@@ -1,125 +1,105 @@
-
-% files = ["./Data/3-line-A.mat";...
-%         "./Data/3-line-B.mat";...
-%         "./Data/5-circle.mat";...
-%         "./Data/5-circle-2.mat";...
-%         "./Data/5-circle-3.mat";...
-%         "./Data/5-circle-4.mat";...
-%         "./Data/5-line-2.mat"];
-%     
 files = ["./Data/Course-1.mat";...
          "./Data/Course-2.mat";...
          "./Data/Course-3.mat"];
-% files = ["./Data/3-line-A.mat";...
-%         "./Data/3-line-B.mat";];
-% close all
+
 clf
 xs = linspace(-5, 5, 100);
 ys = linspace(-5, 5, 100);
 lidar_offset = 0.1;         %m
 
-
 sub = rossubscriber('/stable_scan');
-lidar_pos = [0; 0];         %m, m
-neato_pos = [lidar_offset; 0];
+neato_pos = [0; 0];         %m, m
 neato_ori = [1; 0];         %m, m
 
 hold on
-new_scan = cluster_detection(take_scan(sub), 1);
+new_scan = cluster_detection(take_scan(sub), 1) - (lidar_offset * neato_ori);
 pause
 cups = new_scan;
-avg_cup_dist = mean(norm(diff(cups, 1, 2)));
+avg_cup_dist = calc_avg_dist(cups);
 plot_elems = [];
  for index = 1:55
      % Store last position info
-    last_lidar_pos = lidar_pos;
     last_neato_pos = neato_pos;
     
     % Move
     [angle, translation] = calcmove(neato_pos, neato_ori, cups); 
-     pause(0.5)
+     pause(1)
     
     % Update position info
     neato_pos = last_neato_pos + translation;
     neato_ori = (neato_pos - last_neato_pos) / norm(neato_pos - last_neato_pos);
-    lidar_pos = neato_pos - (lidar_offset * neato_ori);
     
     % Scan
-    new_scan = cluster_detection(take_scan(sub), 0);
+    new_scan = cluster_detection(take_scan(sub), 0) - (lidar_offset * neato_ori);
     
     % Plot
-    plot_elems(1) = plot(lidar_pos(1), lidar_pos(2), 'go');
-    quiver(lidar_pos(1), lidar_pos(2), neato_ori(1)*0.2, neato_ori(2)*0.2, 'g')
+    plot_elems(1) = plot(neato_pos(1), neato_pos(2), 'go');
+    quiver(neato_pos(1), neato_pos(2), neato_ori(1)*0.2, neato_ori(2)*0.2, 'g')
     plot_elems(2) = plot(cups(1, :), cups(2, :), 'r*');
     
     % Translate based on encoders
-    new_scan = rough_transform(neato_ori, lidar_pos, new_scan);
+    new_scan = rough_transform(neato_ori, neato_pos, new_scan);
     % Bayesian correspondence
-    [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist);
+    [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist, neato_pos);
     plot_elems(3) = plot(new_scan(1,:), new_scan(2, :), 'g*');
     plot_elems(4) = plot(new_scan(1, corr_point_ind), new_scan(2, corr_point_ind), 'ks');
     % ICP
     [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
     new_scan = R * new_scan + t;
-    lidar_pos = R * lidar_pos + t;
-    
-    [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist);
-    [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
-    new_scan = R * new_scan + t;
-    lidar_pos = R*lidar_pos + t;
-    neato_ori = (lidar_pos - last_lidar_pos) / norm(lidar_pos - last_lidar_pos);
-    
-    [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist);
-    [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
-  
+    neato_pos = R * neato_pos + t;
+    plot(neato_pos(1), neato_pos(2), 'b+')
+    % Do correspondence and ICP two more times
+    for jindex = 1:2
+        [cup_ind, corr_point_ind] = calc_bayes_corr(cups, new_scan, avg_cup_dist, neato_pos);
+        [R, t] = ICP(cups(:, cup_ind), new_scan(:, corr_point_ind));
+        new_scan = R * new_scan + t;
+         neato_pos = R*neato_pos + t;
+        plot(neato_pos(1), neato_pos(2), 'b+')
+    end
+    neato_ori = (neato_pos - last_neato_pos) / norm(neato_pos - last_neato_pos);  
+    % Average corresponding cups
     cups(:, cup_ind) = (cups(:, cup_ind) + new_scan(:, corr_point_ind)) / 2;
     
+    % Add new cups
     new_point_ind = setdiff(1:length(new_scan), corr_point_ind);
     new_points = new_scan(:, new_point_ind);
-    cups = [cups, R * new_points + t];
-    avg_cup_dist = mean(norm(diff(cups, 1, 2)));
+    cups = [cups, new_points];
+    calc_avg_dist(cups);
+    
+    % Plot
     plot_elems(5) = plot(cups(1,:), cups(2, :), 'k*');
-
-    lidar_pos = R*lidar_pos + t;
-    neato_pos = lidar_pos + (lidar_offset * neato_ori);
-    neato_ori = (lidar_pos - last_lidar_pos) / norm(lidar_pos - last_lidar_pos);
-    plot_elems(6) = plot(lidar_pos(1), lidar_pos(2), 'bo');
-    quiver(lidar_pos(1), lidar_pos(2), neato_ori(1)*0.2, neato_ori(2)*0.2, 'b')
-    legend(plot_elems, {'encoder pos', 'old cones' 'new cones', 'corr cones', 'updated cones', 'final lidar'})
+    plot_elems(6) = plot(neato_pos(1), neato_pos(2), 'bo');
+    quiver(neato_pos(1), neato_pos(2), neato_ori(1)*0.2, neato_ori(2)*0.2, 'b')
+    legend(plot_elems, {'enco    der pos', 'old cones' 'new cones', 'corr cones', 'updated cones', 'final lidar'})
     pause
     clf
     hold on
     axis equal
     plot(cups(1,:), cups(2, :), 'k*');
-    plot(lidar_pos(1), lidar_pos(2), 'ro');
+    plot(neato_pos(1), neato_pos(2), 'ro');
     plot(neato_pos(1), neato_pos(2), 'rs');
 end
 
 
-%%
+%%  
 function polar_points = take_scan(sub)
     scan_message = receive(sub);
     r = scan_message.Ranges(1:end-1);
     theta = [0:359]';
     polar_points = [r, theta];
 end
-function z = calc_gradient(xs, ys, points, order)
-    [xmesh, ymesh] = meshgrid(xs, ys);
-    z = zeros(size(xmesh));
-    interpolated_points = 100;
-    for i = 1:length(points) - 1
-        x1 = points(1, i);
-        y1 = points(2, i);
-        x2 = points(1, i + 1);
-        y2 = points(2, i + 1);
-        plot([x1, x2], [y1, y2], 'k--')
-        x_interp = linspace(x1, x2, interpolated_points);
-        y_interp = linspace(y1, y2, interpolated_points);
-        for j = 1:length(x_interp)
-            z = z + (((xmesh - x_interp(j)).^2 + (ymesh - y_interp(j)).^2).^(-0.5 * order)) ./ interpolated_points;
-        end
+
+function avg = calc_avg_dist(points)
+    min_dists = zeros([1, size(points, 2)]);
+    for index = 1:size(points, 2)
+        point = points(:, index);
+        unique = points;
+        unique(:, index) = [];
+        dists = vecnorm(unique - point);
+        min_dists(index) = min(dists);
     end
-end
+    avg = mean(min_dists);
+  end
 
 function [R_final,T_final] = ICP(old_points, new_points)
     OP = old_points - mean(old_points, 2);
@@ -191,24 +171,30 @@ function [corr_indices_global, corr_indices_local] = find_point_correspondence(g
     end
 end
 
-function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_points, encoder_corrected_points, avg_cup_dist)
+function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_points, encoder_corrected_points, avg_cup_dist, neato_pos)
     pr_new = 0.25;
     pr_old = 1-pr_new;
     corr_indices_local = [];
     corr_indices_global = [];
+    close_indices = find(vecnorm(global_points - neato_pos) < 1.5);
+    close_global_points = global_points(:,  close_indices); 
+    viscircles(close_global_points', 0.03*ones(1, size(close_global_points, 2)))
     for index = 1:length(encoder_corrected_points)
         point = encoder_corrected_points(:, index);
-        [~, ~, new_probs, new_prob] = calc_prob(global_points, point, avg_cup_dist, 0);
-        [X, Y, old_probs, old_prob] = calc_prob(global_points, point, 0, 0);
+        [~, ~, new_probs, new_prob] = calc_prob(close_global_points, point, avg_cup_dist, 0);
+        [X, Y, old_probs, old_prob] = calc_prob(close_global_points, point, 0, 0);
         unnormalized_new_probability = pr_new * new_prob;
         unnormalized_old_probability = pr_old * old_prob;
         posterior_new = unnormalized_new_probability / (unnormalized_new_probability + unnormalized_old_probability);
         if posterior_new < 0.5
             corr_indices_local = [corr_indices_local; index];
-            [M, I] = min(vecnorm(global_points - point));
-            corr_indices_global = [corr_indices_global; I];
+            [~, I] = min(vecnorm(close_global_points - point));
+            corr_indices_global = [corr_indices_global; close_indices(I)];
+        else
+            disp("NEW POINT: ")
+            disp(index)
         end
-%         contour(X, Y, old_probs)
+%         contour(X, Y, new_probs, '--' )
+        contour(X, Y, old_probs)
     end
 end
-

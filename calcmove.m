@@ -15,18 +15,18 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
     angle = angle3d(3);
     translation = next_pos(1:2)-neato_origin(1:2);
     
-    v_l = 0.15;
-    v_r = 0.15;
+    v_l = 0.1;
+    v_r = 0.1;
     v = (v_l+v_r)/2;
     t_forward = norm(translation)/v;
     
     d = 0.24;
     if angle < 0
-        omega_l = 0.1;
-        omega_r = -0.1;
+        omega_l = 0.05;
+        omega_r = -0.05;
     else 
-        omega_l = -0.1;
-        omega_r = 0.1;
+        omega_l = -0.05;
+        omega_r = 0.05;
     end
     omega = (omega_r - omega_l)/d;
     t_rotate = deg2rad(angle)/omega;
