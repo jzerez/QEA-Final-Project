@@ -172,7 +172,7 @@ function [corr_indices_global, corr_indices_local] = find_point_correspondence(g
 end
 
 function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_points, encoder_corrected_points, avg_cup_dist, neato_pos)
-    pr_new = 0.25;
+    pr_new = 0.2;
     pr_old = 1-pr_new;
     corr_indices_local = [];
     corr_indices_global = [];
@@ -186,7 +186,7 @@ function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_poin
         unnormalized_new_probability = pr_new * new_prob;
         unnormalized_old_probability = pr_old * old_prob;
         posterior_new = unnormalized_new_probability / (unnormalized_new_probability + unnormalized_old_probability);
-        if posterior_new < 0.5
+        if posterior_new < 0.6 
             corr_indices_local = [corr_indices_local; index];
             [~, I] = min(vecnorm(close_global_points - point));
             corr_indices_global = [corr_indices_global; close_indices(I)];
@@ -194,7 +194,7 @@ function [corr_indices_global, corr_indices_local] = calc_bayes_corr(global_poin
             disp("NEW POINT: ")
             disp(index)
         end
-%         contour(X, Y, new_probs, '--' )
+        contour(X, Y, new_probs, '--' )
         contour(X, Y, old_probs)
     end
 end

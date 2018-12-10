@@ -71,16 +71,17 @@ function [angle,translation] = calcmove(neato_origin,neato_orientation,cones)
 
     function next = next_cone(origin,orientation,cones)
         vectors = cones-origin;
-        distances = sort(vecnorm(vectors));
-        closest_indices = distances < 2;
-        closest_cones = cones(:,closest_indices);
-        closest_vectors = vectors(:,closest_indices);
+         [~, I] = sort(vecnorm(vectors));
+        closest_cones = cones(:,I);
+        closest_vectors = vectors(:,I);
         for i = 1:size(closest_vectors,2)
-            if dot(closest_vectors(:,i),orientation) > 0.1
+            vector = closest_vectors(:,i);
+            quiver(origin(1), origin(2), vector(1), vector(2));
+              if dot(vector, orientation) > 0.1
                 cone = closest_cones(:,i);
-                
                 break
             end
+            
         end
         next=cone;
     end

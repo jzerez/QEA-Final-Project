@@ -19,9 +19,9 @@ function [meshx, meshy, probs, prob] = calc_prob(points, input, avg, debug)
             prob = prob + (exp(-(r + C - 1))./(exp(-a*(r + C - 1)) + 1));
         else
             rs = ((meshx - x).^2 + (meshy - y).^2).^0.5;
-            new_probs = exp(-rs.^2/0.025);
+            new_probs = exp(-rs.^2/0.035);
             r = ((input(1) - x).^2 + (input(2) - y).^2).^0.5;
-            prob = prob + exp(-r.^2/0.025);
+            prob = prob + exp(-r.^2/0.035);
         end
         probs = probs + new_probs;
     end
